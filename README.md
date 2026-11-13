@@ -2,8 +2,7 @@
 
 上海期货信息技术 CTP 接口 go 语言原生封装，支持生产，测评，OpenCTP, LocalCTP 版本, 适配 Linux, MacOS, Windows(x64)
 
-对应 Rust 语言封装查看 **[Ctp2rs](https://github.com/iezsoft/ctp2rs/)** 项目
-
+对应 Rust 语言封装查看 **[Ctp2rs](https://github.com/pseudocodes/ctp2rs/)** 项目
 当前主分支对应 CTP 版本为 `v6.7.13`
 
 | 平台  | 库目录                                              | 说明                                                                                    |
