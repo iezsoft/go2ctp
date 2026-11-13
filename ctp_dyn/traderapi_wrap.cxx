@@ -10,7 +10,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <dlfcn.h>
+#endif
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -30,8 +34,15 @@
 
 typedef long long intgo;
 
+#ifdef _WIN32
+// Windows 版 thosttraderapi_se.dll 由 MSVC 编译，使用 MSVC C++ 修饰名
+const char* TraderApiCreateSymbol = "?CreateFtdcTraderApi@CThostFtdcTraderApi@@SAPEAV1@PEBD_N@Z";
+const char* TraderApiCreateSymbolAlt = "?CreateFtdcTraderApi@CThostFtdcTraderApi@@SAPEAV1@PEBD@Z";
+const char* TraderApiVersionSymbol = "?GetApiVersion@CThostFtdcTraderApi@@SAPEBDXZ";
+#else
 const char* TraderApiCreateSymbol = "_ZN19CThostFtdcTraderApi19CreateFtdcTraderApiEPKcb";
 const char* TraderApiVersionSymbol = "_ZN19CThostFtdcTraderApi13GetApiVersionEv";
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -2199,6 +2210,21 @@ TTSCTPTraderSpi::TTSCTPTraderSpi(uintptr_t gUserApi, const char* pszDLLPath, con
 {
     typedef CThostFtdcTraderApi* (*TdApiCreator)(const char*, bool);
 
+#ifdef _WIN32
+    dllHandle = (void*)LoadLibraryA(pszDLLPath);
+    if (dllHandle == nullptr) {
+        fprintf(stderr, "[%s] LoadLibrary error: %lu\n", pszDLLPath, (unsigned long)GetLastError());
+        exit(-1);
+    }
+    TdApiCreator tdcreator = (TdApiCreator)GetProcAddress((HMODULE)dllHandle, TraderApiCreateSymbol);
+    if (tdcreator == nullptr) {
+        tdcreator = (TdApiCreator)GetProcAddress((HMODULE)dllHandle, TraderApiCreateSymbolAlt);
+    }
+    if (tdcreator == nullptr) {
+        fprintf(stderr, "[%s] GetProcAddress error: %lu\n", pszDLLPath, (unsigned long)GetLastError());
+        exit(-1);
+    }
+#else
     dllHandle = dlopen(pszDLLPath, RTLD_NOW);
     if (dllHandle == nullptr) {
         fprintf(stderr, "[%s] dlopen error: %s\n", pszDLLPath, dlerror());
@@ -2209,6 +2235,7 @@ TTSCTPTraderSpi::TTSCTPTraderSpi(uintptr_t gUserApi, const char* pszDLLPath, con
         fprintf(stderr, "[%s] dlsym error: %s\n", pszDLLPath, dlerror());
         exit(-1);
     }
+#endif
     this->pUserApi = tdcreator(pszFlowPath, bIsProductionMode);
     // this->pUserApi = pUserApi;
 
@@ -2221,7 +2248,11 @@ TTSCTPTraderSpi::~TTSCTPTraderSpi()
         this->pUserApi->RegisterSpi(nullptr);
         this->pUserApi->Release();
         this->pUserApi = nullptr;
+#ifdef _WIN32
+        FreeLibrary((HMODULE)dllHandle);
+#else
         dlclose(dllHandle);
+#endif
     }
 }
 
@@ -2231,7 +2262,11 @@ const char*
 TTSCTPTraderSpi::GetApiVersion()
 {
     typedef const char* (*GetApiVersion)();
+#ifdef _WIN32
+    GetApiVersion getVersion = (GetApiVersion)GetProcAddress((HMODULE)this->dllHandle, TraderApiVersionSymbol);
+#else
     GetApiVersion getVersion = (GetApiVersion)dlsym(this->dllHandle, TraderApiVersionSymbol);
+#endif
     // return this->pUserApi->GetApiVersion();
     return getVersion();
 }

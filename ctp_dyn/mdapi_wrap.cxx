@@ -10,7 +10,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <dlfcn.h>
+#endif
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -28,8 +32,15 @@
 
 #include "mdapi_wrap.h"
 
+#ifdef _WIN32
+// Windows 版 thostmduserapi_se.dll 由 MSVC 编译，使用 MSVC C++ 修饰名
+const char* MdApiCreateSymbol = "?CreateFtdcMdApi@CThostFtdcMdApi@@SAPEAV1@PEBD_N1_N@Z";
+const char* MdApiCreateSymbolAlt = "?CreateFtdcMdApi@CThostFtdcMdApi@@SAPEAV1@PEBD_N1@Z";
+const char* MdApiVersionSymbol = "?GetApiVersion@CThostFtdcMdApi@@SAPEBDXZ";
+#else
 const char* MdApiCreateSymbol = "_ZN15CThostFtdcMdApi15CreateFtdcMdApiEPKcbbb";
 const char* MdApiVersionSymbol = "_ZN15CThostFtdcMdApi13GetApiVersionEv";
+#endif
 
 typedef long long intgo;
 typedef struct
@@ -318,6 +329,21 @@ TTSCTPMdSpi::TTSCTPMdSpi(CThostFtdcMdApi* pUserApi, uintptr_t gUserApi)
 TTSCTPMdSpi::TTSCTPMdSpi(uintptr_t gUserApi, const char* pszDLLPath, const char* pszFlowPath, const bool bIsUsingUdp, const bool bIsMulticast, bool bIsProductionMode)
 {
     typedef CThostFtdcMdApi* (*MdApiCreator)(const char*, const bool, const bool, bool);
+#ifdef _WIN32
+    dllHandle = (void*)LoadLibraryA(pszDLLPath);
+    if (dllHandle == nullptr) {
+        fprintf(stderr, "[%s] LoadLibrary error: %lu\n", pszDLLPath, (unsigned long)GetLastError());
+        exit(-1);
+    }
+    MdApiCreator mdcreator = (MdApiCreator)GetProcAddress((HMODULE)dllHandle, MdApiCreateSymbol);
+    if (mdcreator == nullptr) {
+        mdcreator = (MdApiCreator)GetProcAddress((HMODULE)dllHandle, MdApiCreateSymbolAlt);
+    }
+    if (mdcreator == nullptr) {
+        fprintf(stderr, "[%s] GetProcAddress error: %lu\n", pszDLLPath, (unsigned long)GetLastError());
+        exit(-1);
+    }
+#else
     dllHandle = dlopen(pszDLLPath, RTLD_NOW);
     if (dllHandle == nullptr) {
         fprintf(stderr, "[%s] dlopen error: %s\n", pszDLLPath, dlerror());
@@ -328,6 +354,7 @@ TTSCTPMdSpi::TTSCTPMdSpi(uintptr_t gUserApi, const char* pszDLLPath, const char*
         fprintf(stderr, "[%s] dlsym error: %s\n", pszDLLPath, dlerror());
         exit(-1);
     }
+#endif
     // printf("bIsUsingUdp: %d, bIsMulticast: %d, bIsProductionMode: %d\n", bIsUsingUdp, bIsMulticast, bIsProductionMode);
     this->pUserApi = mdcreator(pszFlowPath, bIsUsingUdp, bIsMulticast, bIsProductionMode);
     this->gUserApi = gUserApi;
@@ -339,7 +366,11 @@ TTSCTPMdSpi::~TTSCTPMdSpi()
         this->pUserApi->RegisterSpi(nullptr);
         this->pUserApi->Release();
         this->pUserApi = nullptr;
+#ifdef _WIN32
+        FreeLibrary((HMODULE)dllHandle);
+#else
         dlclose(dllHandle);
+#endif
     }
 }
 
@@ -354,7 +385,11 @@ uintptr_t _wrap_tts_CThostFtdcMdApi_DestroyUserMdApi(TTSCTPMdSpi* pMdApi)
 const char* TTSCTPMdSpi::GetApiVersion()
 {
     typedef const char* (*GetApiVersion)();
+#ifdef _WIN32
+    GetApiVersion getVersion = (GetApiVersion)GetProcAddress((HMODULE)this->dllHandle, MdApiVersionSymbol);
+#else
     GetApiVersion getVersion = (GetApiVersion)dlsym(this->dllHandle, MdApiVersionSymbol);
+#endif
     // return this->pUserApi->GetApiVersion();
     return getVersion();
 }

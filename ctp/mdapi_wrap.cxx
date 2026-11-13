@@ -21,6 +21,41 @@
 
 #include "mdapi_wrap.h"
 
+#ifdef _WIN32
+#include <windows.h>
+
+// Windows 官方 CTP SDK 由 MSVC 编译，导出名为 MSVC C++ 修饰名。
+// MinGW 生成的 Itanium 修饰名无法与之匹配，因此这里统一改为运行时加载。
+typedef decltype(&CThostFtdcMdApi::CreateFtdcMdApi) MdApiCreatorWin;
+typedef decltype(&CThostFtdcMdApi::GetApiVersion) MdApiVersionWin;
+
+static HMODULE g_mdDllHandle = NULL;
+static MdApiCreatorWin g_mdCreator = NULL;
+static MdApiVersionWin g_mdVersion = NULL;
+
+static void _loadMdLibrary()
+{
+    if (g_mdDllHandle != NULL) {
+        return;
+    }
+    g_mdDllHandle = LoadLibraryA("thostmduserapi_se.dll");
+    if (g_mdDllHandle == NULL) {
+        fprintf(stderr, "LoadLibraryA(thostmduserapi_se.dll) failed: %lu\n", (unsigned long)GetLastError());
+        exit(-1);
+    }
+    // v6.7.13 为 4 参数版本；兼容旧版 3 参数导出名
+    g_mdCreator = (MdApiCreatorWin)GetProcAddress(g_mdDllHandle, "?CreateFtdcMdApi@CThostFtdcMdApi@@SAPEAV1@PEBD_N1_N@Z");
+    if (g_mdCreator == NULL) {
+        g_mdCreator = (MdApiCreatorWin)GetProcAddress(g_mdDllHandle, "?CreateFtdcMdApi@CThostFtdcMdApi@@SAPEAV1@PEBD_N1@Z");
+    }
+    if (g_mdCreator == NULL) {
+        fprintf(stderr, "GetProcAddress(CreateFtdcMdApi) failed: %lu\n", (unsigned long)GetLastError());
+        exit(-1);
+    }
+    g_mdVersion = (MdApiVersionWin)GetProcAddress(g_mdDllHandle, "?GetApiVersion@CThostFtdcMdApi@@SAPEBDXZ");
+}
+#endif
+
 typedef long long intgo;
 typedef struct
 {
@@ -40,7 +75,12 @@ extern "C" {
 #endif
 QCTPMdSpi* _wrap_CThostFtdcMdApi_CreateFtdcMdApi()
 {
+#ifdef _WIN32
+    _loadMdLibrary();
+    CThostFtdcMdApi* pUserApi = g_mdCreator("./data/", false, false, true);
+#else
     CThostFtdcMdApi* pUserApi = CThostFtdcMdApi::CreateFtdcMdApi("./data/", false);
+#endif
     QCTPMdSpi* pUserSpi = new QCTPMdSpi(pUserApi);
     pUserSpi->RegisterSpi(pUserSpi);
     return pUserSpi;
@@ -49,7 +89,12 @@ QCTPMdSpi* _wrap_CThostFtdcMdApi_CreateFtdcMdApi()
 QCTPMdSpi* _wrap_CThostFtdcMdApi_CreateFtdcMdApi2(uintptr_t gUserApi, const char* pszFlowPath, const bool bIsUsingUdp, const bool bIsMulticast, bool bIsProductionMode)
 {
     // printf("go_user_api %lu\n", gUserApi);
+#ifdef _WIN32
+    _loadMdLibrary();
+    CThostFtdcMdApi* pUserApi = g_mdCreator(pszFlowPath, bIsUsingUdp, bIsMulticast, bIsProductionMode);
+#else
     CThostFtdcMdApi* pUserApi = CThostFtdcMdApi::CreateFtdcMdApi(pszFlowPath, bIsUsingUdp, bIsMulticast, bIsProductionMode);
+#endif
     QCTPMdSpi* pUserSpi = new QCTPMdSpi(pUserApi, gUserApi);
     pUserSpi->RegisterSpi(pUserSpi);
     return pUserSpi;
@@ -236,7 +281,14 @@ uintptr_t _wrap_CThostFtdcMdApi_DestroyUserMdApi(QCTPMdSpi* pMdApi)
 
 const char* QCTPMdSpi::GetApiVersion()
 {
+#ifdef _WIN32
+    if (g_mdVersion == NULL) {
+        return "";
+    }
+    return g_mdVersion();
+#else
     return this->pUserApi->GetApiVersion();
+#endif
 }
 
 void QCTPMdSpi::Release()

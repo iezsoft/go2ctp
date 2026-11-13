@@ -21,6 +21,41 @@
 
 #include "traderapi_wrap.h"
 
+#ifdef _WIN32
+#include <windows.h>
+
+// Windows 官方 CTP SDK 由 MSVC 编译，导出名为 MSVC C++ 修饰名。
+// MinGW 生成的 Itanium 修饰名无法与之匹配，因此这里统一改为运行时加载。
+typedef decltype(&CThostFtdcTraderApi::CreateFtdcTraderApi) TraderApiCreatorWin;
+typedef decltype(&CThostFtdcTraderApi::GetApiVersion) TraderApiVersionWin;
+
+static HMODULE g_tdDllHandle = NULL;
+static TraderApiCreatorWin g_tdCreator = NULL;
+static TraderApiVersionWin g_tdVersion = NULL;
+
+static void _loadTraderLibrary()
+{
+    if (g_tdDllHandle != NULL) {
+        return;
+    }
+    g_tdDllHandle = LoadLibraryA("thosttraderapi_se.dll");
+    if (g_tdDllHandle == NULL) {
+        fprintf(stderr, "LoadLibraryA(thosttraderapi_se.dll) failed: %lu\n", (unsigned long)GetLastError());
+        exit(-1);
+    }
+    // v6.7.13 为 2 参数版本；兼容旧版 1 参数导出名
+    g_tdCreator = (TraderApiCreatorWin)GetProcAddress(g_tdDllHandle, "?CreateFtdcTraderApi@CThostFtdcTraderApi@@SAPEAV1@PEBD_N@Z");
+    if (g_tdCreator == NULL) {
+        g_tdCreator = (TraderApiCreatorWin)GetProcAddress(g_tdDllHandle, "?CreateFtdcTraderApi@CThostFtdcTraderApi@@SAPEAV1@PEBD@Z");
+    }
+    if (g_tdCreator == NULL) {
+        fprintf(stderr, "GetProcAddress(CreateFtdcTraderApi) failed: %lu\n", (unsigned long)GetLastError());
+        exit(-1);
+    }
+    g_tdVersion = (TraderApiVersionWin)GetProcAddress(g_tdDllHandle, "?GetApiVersion@CThostFtdcTraderApi@@SAPEBDXZ");
+}
+#endif
+
 typedef long long intgo;
 
 #ifdef __cplusplus
@@ -29,7 +64,12 @@ extern "C" {
 
 QCTPTraderSpi* _wrap_CThostFtdcTraderApi_CreateFtdcTraderApi()
 {
+#ifdef _WIN32
+    _loadTraderLibrary();
+    CThostFtdcTraderApi* pUserApi = g_tdCreator("./data/", true);
+#else
     CThostFtdcTraderApi* pUserApi = CThostFtdcTraderApi::CreateFtdcTraderApi("./data/");
+#endif
     QCTPTraderSpi* pUserSpi = new QCTPTraderSpi(pUserApi);
     pUserSpi->RegisterSpi(pUserSpi);
     return pUserSpi;
@@ -38,7 +78,12 @@ QCTPTraderSpi* _wrap_CThostFtdcTraderApi_CreateFtdcTraderApi()
 QCTPTraderSpi* _wrap_CThostFtdcTraderApi_CreateFtdcTraderApi2(uintptr_t gUserApi, const char* pszFlowPath, bool bIsProductionMode)
 {
     // printf("go_user_api %lu\n", gUserApi);
+#ifdef _WIN32
+    _loadTraderLibrary();
+    CThostFtdcTraderApi* pUserApi = g_tdCreator(pszFlowPath, bIsProductionMode);
+#else
     CThostFtdcTraderApi* pUserApi = CThostFtdcTraderApi::CreateFtdcTraderApi(pszFlowPath, bIsProductionMode);
+#endif
     QCTPTraderSpi* pUserSpi = new QCTPTraderSpi(pUserApi, gUserApi);
     pUserSpi->RegisterSpi(pUserSpi);
     return pUserSpi;
@@ -1860,7 +1905,14 @@ QCTPTraderSpi::QCTPTraderSpi(CThostFtdcTraderApi* pUserApi, uintptr_t gUserApi)
 
 const char* QCTPTraderSpi::GetApiVersion()
 {
+#ifdef _WIN32
+    if (g_tdVersion == NULL) {
+        return "";
+    }
+    return g_tdVersion();
+#else
     return this->pUserApi->GetApiVersion();
+#endif
 }
 
 void QCTPTraderSpi::Release()

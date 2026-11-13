@@ -1,2 +1,4 @@
 *.go linguist-language=Go
 *.h linguist-language=Go
+*.dll binary
+*.lib binary

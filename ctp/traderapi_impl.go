@@ -329,7 +329,7 @@ func CreateTraderApi(options ...TraderOption) thost.TraderApi {
 	}
 	if api.flowPath != "" {
 		var err error
-		if strings.HasSuffix(api.flowPath, "/") {
+		if strings.HasSuffix(api.flowPath, "/") || strings.HasSuffix(api.flowPath, "\\") {
 			err = os.MkdirAll(api.flowPath, os.ModePerm)
 		} else {
 			parentDir := filepath.Dir(api.flowPath)

@@ -23,5 +23,9 @@ package ctp_dyn
 #cgo darwin CXXFLAGS: -std=c++11
 #cgo darwin CPPFLAGS: -I. -I${SRCDIR}/../ctp/lib/v6.7.13_MacOS_20260529
 
+#cgo windows LDFLAGS: -lstdc++ -static-libgcc -static-libstdc++
+#cgo windows CXXFLAGS: -std=c++11
+#cgo windows CPPFLAGS: -I. -I${SRCDIR}/../ctp/lib/v6.7.13_20260225_traderapi64_se_windows
+
 */
 import "C"

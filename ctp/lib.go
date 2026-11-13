@@ -20,6 +20,13 @@ package ctp
 #cgo darwin LDFLAGS: -L. -F${SRCDIR}/lib/v6.7.13_MacOS_20260529 -framework thostmduserapi_se -framework thosttraderapi_se -Wl,-rpath,${SRCDIR}/lib/v6.7.13_MacOS_20260529
 #cgo darwin CXXFLAGS: -std=c++11
 #cgo darwin CPPFLAGS: -I. -I${SRCDIR}/lib/v6.7.13_MacOS_20260529/
+
+// Windows 下不进行链接期绑定，改为运行时 LoadLibraryA 加载
+// thostmduserapi_se.dll / thosttraderapi_se.dll，避免 MinGW 无法解析
+// MSVC 的 C++ 修饰名。DLL 需放在可执行文件同目录或 PATH 中。
+#cgo windows LDFLAGS: -lstdc++ -static-libgcc -static-libstdc++
+#cgo windows CXXFLAGS: -std=c++11
+#cgo windows CPPFLAGS: -I. -I${SRCDIR}/lib/v6.7.13_20260225_traderapi64_se_windows/
 */
 import "C"
 import (

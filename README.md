@@ -1,6 +1,6 @@
 # Go2ctp
 
-上海期货信息技术 CTP 接口 go 语言原生封装，支持生产，测评，OpenCTP, LocalCTP 版本, 适配 Linux, MacOS
+上海期货信息技术 CTP 接口 go 语言原生封装，支持生产，测评，OpenCTP, LocalCTP 版本, 适配 Linux, MacOS, Windows(x64)
 
 对应 Rust 语言封装查看 **[Ctp2rs](https://github.com/pseudocodes/ctp2rs/)** 项目
 
@@ -10,6 +10,7 @@
 | ----- | --------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | Linux | `ctp/lib/v6.7.13_20260225_api_traderapi_se_linux64` | `thosttraderapi_se.so` / `thostmduserapi_se.so`                                         |
 | MacOS | `ctp/lib/v6.7.13_MacOS_20260529`                    | `thosttraderapi_se.framework` / `thostmduserapi_se.framework`，x86_64 + arm64 universal |
+| Windows | `ctp/lib/v6.7.13_20260225_traderapi64_se_windows` | `thosttraderapi_se.dll` / `thostmduserapi_se.dll`，需要 MinGW-w64(x86_64) 且 `CGO_ENABLED=1` |
 
 ## Sample
 
@@ -253,9 +254,13 @@ func main() {
 > * 运行时多个 API 实例共存，不同平台的 API 实例可以同时存在一个进程空间中，例如可以同时连接实盘， SIMNOW， OPENCTP
 > * 全局指针 map 采用了标准库中的 cgo.Handle 无并发问题
 
-**Q.04**: 为什么不提供 Windows 平台支持
+**Q.04**: Windows 平台如何使用
 
-**A.04**: 开发者没有 Windows 环境，不想装虚拟机，有兴趣的开发者可以提 PR
+**A.04**: 
+> * Windows 官方 CTP SDK 由 MSVC 编译，导出符号为 MSVC C++ 修饰名，MinGW 无法在链接期直接绑定，因此本项目在 Windows 下统一改为运行时 `LoadLibraryA` + `GetProcAddress` 加载 `thostmduserapi_se.dll` / `thosttraderapi_se.dll`
+> * 构建需要安装 MSYS2 的 `mingw-w64-x86_64-gcc`，并设置 `CGO_ENABLED=1`、`GOARCH=amd64`；官方 Windows SDK 仅建议使用 64 位版本
+> * `ctp_dyn` 通过 `MdDynamicLibPath` / `TraderDynamicLibPath` 传入 DLL 全路径；`ctp` 静态包默认从可执行文件所在目录或 `PATH` 中查找同名 DLL，部署时请将两个 DLL 与二进制放在一起
+> * 官方 Windows SDK 可从 [SimNow](https://www.simnow.com.cn/static/apiDownload.action) 或上期技术官网获取，本项目 Windows 库目录为 `ctp/lib/v6.7.13_20260225_traderapi64_se_windows`
 
 **Q.05**: ctp 目录和 ctp_dyn 目录的封装有什么不同
 
