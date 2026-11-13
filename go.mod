@@ -1,4 +1,4 @@
-module github.com/pseudocodes/go2ctp
+module github.com/iezsoft/go2ctp
 
 go 1.20
 

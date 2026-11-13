@@ -68,7 +68,7 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/pseudocodes/go2ctp/thost"
+	"github.com/iezsoft/go2ctp/thost"
 )
 
 func CreateMdApi(options ...MdOption) thost.MdApi {

@@ -315,7 +315,7 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/pseudocodes/go2ctp/thost"
+	"github.com/iezsoft/go2ctp/thost"
 )
 
 func CreateTraderApi(options ...TraderOption) thost.TraderApi {

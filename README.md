@@ -2,7 +2,7 @@
 
 上海期货信息技术 CTP 接口 go 语言原生封装，支持生产，测评，OpenCTP, LocalCTP 版本, 适配 Linux, MacOS, Windows(x64)
 
-对应 Rust 语言封装查看 **[Ctp2rs](https://github.com/pseudocodes/ctp2rs/)** 项目
+对应 Rust 语言封装查看 **[Ctp2rs](https://github.com/iezsoft/ctp2rs/)** 项目
 
 当前主分支对应 CTP 版本为 `v6.7.13`
 
@@ -24,8 +24,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/pseudocodes/go2ctp/ctp"
-	"github.com/pseudocodes/go2ctp/thost"
+	"github.com/iezsoft/go2ctp/ctp"
+	"github.com/iezsoft/go2ctp/thost"
 )
 
 func init() {
@@ -118,8 +118,8 @@ import (
 	"time"
 	"runtime"
 
-	"github.com/pseudocodes/go2ctp/ctp_dyn"
-	"github.com/pseudocodes/go2ctp/thost"
+	"github.com/iezsoft/go2ctp/ctp_dyn"
+	"github.com/iezsoft/go2ctp/thost"
 )
 
 func init() {
@@ -220,7 +220,7 @@ func main() {
 
 
 ## FAQ
-**Q.01**: 为什么在有了 [*pseudocodes/goctp*](https://github.com/pseudocodes/goctp) 项目之后又开启了 *go2ctp* 项目
+**Q.01**: 为什么在有了 [*iezsoft/goctp*](https://github.com/iezsoft/goctp) 项目之后又开启了 *go2ctp* 项目
  
 **A.01**: 发现前项目使用后切换平台 (MacOS), 使用 OpenCTP TTS 系统，以及穿透式认证时(使用 CP 版本) 比较不方便，在静态编译封装的方式下只能将不同的平台库放在不同的分支下，再加上未来对 *ctp-mini* 的支持，就在本项目集中对不同平台的 CTP 库进行集中提供
 
@@ -240,7 +240,7 @@ func main() {
 
 **Q.03**: 与 [*github.com/haifengat/goctp*](https://github.com/haifengat/goctp) 项目有什么区别
 
-**A.03**: 海风提供的 goctp 的封装对 golang 的特性应用得最好， [*pseudocodes/goctp*](https://github.com/pseudocodes/goctp) 也参考了该项目的一些细节, 提供 lite 接口的封装; 感谢这个项目在 golang 封装 ctp api 方向的探索
+**A.03**: 海风提供的 goctp 的封装对 golang 的特性应用得最好， [*iezsoft/goctp*](https://github.com/iezsoft/goctp) 也参考了该项目的一些细节, 提供 lite 接口的封装; 感谢这个项目在 golang 封装 ctp api 方向的探索
 
 > 该项目的问题：
 > * v1 版本的封装比较乱，使用方式与传统的调用方式有出入;
@@ -265,7 +265,7 @@ func main() {
 **Q.05**: ctp 目录和 ctp_dyn 目录的封装有什么不同
 
 **A.05**: 
-> * ctp 的封装来自 [*pseudocodes/goctp*](https://github.com/pseudocodes/goctp), 剔除了 *lite* 和 *convert* 相关代码，原则上只提供一层封装，直接桥接 cgo 空间回调过来的数据
+> * ctp 的封装来自 [*iezsoft/goctp*](https://github.com/iezsoft/goctp), 剔除了 *lite* 和 *convert* 相关代码，原则上只提供一层封装，直接桥接 cgo 空间回调过来的数据
 > * ctp 目录属于静态编译链接，其他项目采用该目录下的代码，依赖的动态库的路径会在编译构建期完成初始绑定，默认路径为 go2ctp 库的存放路径，只部署二进制程序在 Linux 环境需要设置 LD_LIBRARY_PATH 环境变量来提供依赖的 ctp 动态库路径; MacOS 环境一般不用再独立设置 `@rpath`，推荐 MacOS 环境采用 ctp_dyn 依赖
 > * ctp_dyn 封装方式采用了读取动态库符号的方式，通过在运行时提供动态库的路径，完成 API 实例对象的生成和绑定，理论上 ctp_dyn 的封装方式更灵活方便，可以通过配置的方式动态的替换 linux 下不同平台的库，包括官方生产和测评版本，rohan(融航)，openctp-tts 平台，无需再编译项目代码. ctp_dyn 同时支持 openctp 的 MacOS 版本 dylib
 > * ctp_dyn 使用需要用户明确提供动态库地址，部署时需要动态库与二进制程序一起部署
@@ -322,22 +322,22 @@ virtual int ReqUserLogin(CThostFtdcReqUserLoginField* pReqUserLoginField, int nR
 | 项目地址                                                                                                                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | 推荐指数 |
 | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | https://github.com/gaxxx/ctp                                                                                               | 最早 golang 版本的 ctp 封装，作者发布在水木论坛，在这个项目中 <br> 可以观察到 go 早期版本的封装编译指令                                                                                                                                                                                                                                                                                                                                                                                        | ☆☆☆☆☆    |
-| https://github.com/pseudocodes/goctp                                                                                       | 含 DataCollect 封装支持，提供 go 类型结构的 convert 转换方法                                                                                                                                                                                                                                                                                                                                                                                                                                   | ★★★★☆    |
+| https://github.com/iezsoft/goctp                                                                                       | 含 DataCollect 封装支持，提供 go 类型结构的 convert 转换方法                                                                                                                                                                                                                                                                                                                                                                                                                                   | ★★★★☆    |
 | https://github.com/haifengat/goctp <br> [https://gitee.com/haifengat/goctp/v2](https://gitee.com/haifengat/goctp/tree/v2/) | 描述见 FAQ.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | ★★★★☆    |
 | https://github.com/hankchan/goctp                                                                                          | 描述见 FAQ.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | ★★★☆☆    |
 | https://github.com/mayiweb/goctp                                                                                           | 源自 https://github.com/hankchan/goctp                                                                                                                                                                                                                                                                                                                                                                                                                                                         | ★★★☆☆    |
 | https://github.com/kkqy/ctp-go                                                                                             | a. 对 CTP 的版本处理与 `A.01` 中的描述相同，不同版本放置于不同分支下 <br> b. 该项目将 Swig 编译后展开的代码直接放置于项目中，有 FAQ 中 `A.02` 中描述的问题，该项目文档也说明了编译速度慢的问题 <br> c. CTP 结构体创建在 c 内存空间侧，需要手动自行回收                                                                                                                                                                                                                                         | ★★☆☆☆    |
-| https://github.com/ztrade/ctp                                                                                              | a. 项目整体布局类似 https://github.com/pseudocodes/goctp, 细节在于 wrapper 代码中将 Api 和 Spi 的 C++ 类分别进行了独立封装，与 SWIG 的展开代码类似 <br> b. 调用 Api 接口时 C 内存空间侧申请一次内存并拷贝结构体数据，Spi 回调侧 go 内存空间侧申请一次内存并拷贝结构体，相较本项目整体多了两次内存申请以及数据深拷贝                                                                                                                                                                            | ★★★★☆    |
+| https://github.com/ztrade/ctp                                                                                              | a. 项目整体布局类似 https://github.com/iezsoft/goctp, 细节在于 wrapper 代码中将 Api 和 Spi 的 C++ 类分别进行了独立封装，与 SWIG 的展开代码类似 <br> b. 调用 Api 接口时 C 内存空间侧申请一次内存并拷贝结构体数据，Spi 回调侧 go 内存空间侧申请一次内存并拷贝结构体，相较本项目整体多了两次内存申请以及数据深拷贝                                                                                                                                                                            | ★★★★☆    |
 | https://github.com/etveritas/ctp-wrapper/                                                                                  | a. 采用了与 [ftdc2_ctp](https://github.com/shawn666liu/ftdc2c_ctp) 类似的方案，先用一层封装代码将 C++ 接口暴露为纯 C 接口，然后基于 C 接口的封装库实现 Go/Python 的进一步 FFI 封装;<br> b. go FFI 封装思路类似 `go2ctp/ctp_dyn` 但未采用 cgo 进行代码桥接，而是采用了 `purego` 库将 API 以及 SPI 回调函数与 c 库符号一一注册绑定的形式来实现虚表映射，将 cgo 封装代码的工作推到了 c 库构建的代码中, <br> c. 项目适合开发者 DIY 构建其他语言的 CTP FFI 项目, 项目布局不适合作为 go 的稳定库引用 | ★★★★☆    |
 
 
 ## Base on `go2ctp`
-* https://github.com/pseudocodes/goctp_l3_estimate
+* https://github.com/iezsoft/goctp_l3_estimate
   *  订单簿可视化展示
-* https://github.com/pseudocodes/light-trader
-* https://github.com/pseudocodes/open-md-gateway-go
+* https://github.com/iezsoft/light-trader
+* https://github.com/iezsoft/open-md-gateway-go
 	* 高性能期货行情数据网关，兼容 [`DIFF`](https://doc.shinnytech.com/diff/latest/general.html) 协议 
-* https://github.com/pseudocodes/datacollect
+* https://github.com/iezsoft/datacollect
     * CTP 客户端系统信息采集库封装 
 * alpha-trade-gateway (incoming)
 
@@ -348,7 +348,7 @@ virtual int ReqUserLogin(CThostFtdcReqUserLoginField* pReqUserLoginField, int nR
 
 
 ## Reference
- 【1】[*github.com/pseudocodes/goctp*](https://github.com/pseudocodes/goctp)   
+ 【1】[*github.com/iezsoft/goctp*](https://github.com/iezsoft/goctp)   
 
  【2】[*github.com/haifengat/goctp*](https://github.com/haifengat/goctp)
 

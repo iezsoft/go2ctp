@@ -13,7 +13,7 @@
 package ctp
 
 import (
-	"github.com/pseudocodes/go2ctp/thost"
+	"github.com/iezsoft/go2ctp/thost"
 )
 
 var _ thost.TraderSpi = &BaseTraderSpi{}

@@ -32,7 +32,7 @@ import "C"
 import (
 	"runtime/cgo"
 
-	"github.com/pseudocodes/go2ctp/thost"
+	"github.com/iezsoft/go2ctp/thost"
 )
 
 const (
